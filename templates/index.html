@@ -1,23 +1,14 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Movie Ticket Booking</title>
+    <title>Classroom Portal</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
-    <h1>🎬 Movie Ticket Booking</h1>
+    <h1>🏫 Welcome to classroom thang</h1>
+    <p>This is a portal for students to check their grades and for the teacher to manage them.</p>
 
-    <div class="movies">
-        {% for movie in movies %}
-            <div class="movie">
-                <h2>{{ movie.title }}</h2>
-                <p>Price: ${{ movie.price }}</p>
-                <a href="{{ url_for('book', movie_id=movie.id) }}"><button>Book Now</button></a>
-            </div>
-        {% endfor %}
-    </div>
-
+    <a href="{{ url_for('student_login') }}"><button>🎓 Student Login</button></a>
+    <a href="{{ url_for('login') }}"><button>👩‍🏫 Teacher Login</button></a>
 </body>
 </html>
