@@ -1,14 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Classroom Portal</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <title>worldle gaem</title>
 </head>
 <body>
-    <h1>🏫 Welcome to classroom thang</h1>
-    <p>This is a portal for students to check their grades and for the teacher to manage them.</p>
-
-    <a href="{{ url_for('student_login') }}"><button>🎓 Student Login</button></a>
-    <a href="{{ url_for('login') }}"><button>👩‍🏫 Teacher Login</button></a>
+    <h1>wekcome to de worldle gaems.</h1>
+    <a href="{{ url_for('game') }}">Start</a><br>
+    <a href="{{ url_for('admin') }}">Admin</a>
 </body>
 </html>

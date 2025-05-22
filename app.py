@@ -1,97 +1,79 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, flash
 from flask_sqlalchemy import SQLAlchemy
-from werkzeug.security import generate_password_hash, check_password_hash
+import random
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///grades.db'
+app.secret_key = 'your_secret_key'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///wordle.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.secret_key = 'supersecretkey'
-
 db = SQLAlchemy(app)
 
-# Models
-class User(db.Model):  # Teacher
+# Word model
+class Word(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    password_hash = db.Column(db.String(200), nullable=False)
+    text = db.Column(db.String(5), unique=True, nullable=False)
 
-class Student(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), unique=True, nullable=False)
-
-class StudentGrade(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    student_name = db.Column(db.String(100), nullable=False)
-    subject = db.Column(db.String(100), nullable=False)
-    grade = db.Column(db.String(10), nullable=False)
-
-with app.app_context():
-    db.create_all()
-
-# Routes
+# Index page
 @app.route('/')
-def home():
+def index():
     return render_template('index.html')
 
-@app.route('/student-login', methods=['GET', 'POST'])
-def student_login():
+# Game page
+@app.route('/game', methods=['GET', 'POST'])
+def game():
+    if 'target_word' not in session:
+        word = Word.query.order_by(db.func.random()).first()
+        session['target_word'] = word.text.upper()
+        session['guesses'] = []
+
     if request.method == 'POST':
-        name = request.form['name']
-        student = Student.query.filter_by(name=name).first()
-        if student:
-            session['student'] = name
-            return redirect(url_for('student_dashboard'))
-        return "Student not found", 404
-    return render_template('student_login.html')
+        guess = request.form.get('guess', '').upper()
+        if len(guess) == 5:
+            session['guesses'].append(guess)
+            if guess == session['target_word']:
+                flash('You guessed it!')
+        return redirect(url_for('game'))
 
-@app.route('/student-dashboard')
-def student_dashboard():
-    if 'student' not in session:
-        return redirect(url_for('student_login'))
-    name = session['student']
-    grades = StudentGrade.query.filter_by(student_name=name).all()
-    return render_template('student_dashboard.html', name=name, grades=grades)
+    return render_template('game.html', guesses=session.get('guesses', []), target=session.get('target_word'))
 
-@app.route('/logout')
-def logout():
-    session.clear()
-    return redirect(url_for('home'))
+# Reset game
+@app.route('/reset')
+def reset():
+    session.pop('target_word', None)
+    session.pop('guesses', None)
+    return redirect(url_for('game'))
 
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        user = User.query.filter_by(username=username).first()
-        if user and check_password_hash(user.password_hash, password):
-            session['user'] = username
-            return redirect(url_for('admin'))
-        else:
-            return "Invalid credentials", 403
-    return render_template('login.html')
-
+# Admin login (simple, no auth)
 @app.route('/admin', methods=['GET', 'POST'])
 def admin():
-    if 'user' not in session:
-        return redirect(url_for('login'))
-
     if request.method == 'POST':
-        name = request.form['student_name']
-        subject = request.form['subject']
-        grade = request.form['grade']
+        new_word = request.form.get('word', '').lower()
+        if len(new_word) == 5 and new_word.isalpha():
+            if not Word.query.filter_by(text=new_word).first():
+                db.session.add(Word(text=new_word))
+                db.session.commit()
+                flash("Word added.")
+            else:
+                flash("Word already exists.")
+        else:
+            flash("Word must be 5 letters.")
+        return redirect(url_for('admin'))
 
-        # Ensure student exists
-        student = Student.query.filter_by(name=name).first()
-        if not student:
-            student = Student(name=name)
-            db.session.add(student)
+    words = Word.query.all()
+    return render_template('admin.html', words=words)
 
-        db.session.add(StudentGrade(student_name=name, subject=subject, grade=grade))
+# Delete word
+@app.route('/delete/<int:word_id>')
+def delete_word(word_id):
+    word = Word.query.get(word_id)
+    if word:
+        db.session.delete(word)
         db.session.commit()
+    return redirect(url_for('admin'))
 
-    grades = StudentGrade.query.all()
-    return render_template('admin.html', grades=grades)
 
 
 if __name__ == '__main__':
+    with app.app_context():
+        db.create_all()
     app.run(debug=True)

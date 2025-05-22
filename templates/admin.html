@@ -1,33 +1,33 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Admin Page</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <title>Admin Panel</title>
 </head>
 <body>
-    <h1>🎓 Teacher Dashboard</h1>
+    <h1>Admin Panel - Add Words</h1>
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <ul>
+        {% for message in messages %}
+          <li>{{ message }}</li>
+        {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+
     <form method="POST">
-        <label>Student Name:</label><br>
-        <input type="text" name="student_name" required><br>
-        <label>Subject:</label><br>
-        <input type="text" name="subject" required><br>
-        <label>Grade:</label><br>
-        <input type="text" name="grade" required><br><br>
-        <button type="submit">Add Grade</button>
+        <input type="text" name="word" maxlength="5" required>
+        <input type="submit" value="Add Word">
     </form>
 
-    <h2>📜 All Grades</h2>
-    <table border="1">
-        <tr><th>Name</th><th>Subject</th><th>Grade</th></tr>
-        {% for grade in grades %}
-        <tr>
-            <td>{{ grade.student_name }}</td>
-            <td>{{ grade.subject }}</td>
-            <td>{{ grade.grade }}</td>
-        </tr>
+    <h2>Existing Words:</h2>
+    <ul>
+        {% for word in words %}
+            <li>{{ word.text }} <a href="{{ url_for('delete_word', word_id=word.id) }}">Delete</a></li>
         {% endfor %}
-    </table>
-    <br>
-    <a href="{{ url_for('logout') }}">🚪 Logout</a>
+    </ul>
+
+    <a href="{{ url_for('index') }}">Go backs</a>
 </body>
 </html>

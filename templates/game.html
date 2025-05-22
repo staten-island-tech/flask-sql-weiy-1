@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <title>Wordle Game</title>
+</head>
+<body>
+    <h1>Guess the Word</h1>
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <ul>
+        {% for message in messages %}
+          <li>{{ message }}</li>
+        {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+    
+    <form method="POST">
+        <input type="text" name="guess" maxlength="5" required>
+        <input type="submit" value="Submit Guess">
+    </form>
+
+    <h2>Guesses:</h2>
+    <ul>
+        {% for guess in guesses %}
+            <li>
+                {% for i in range(5) %}
+                    {% if guess[i] == target[i] %}
+                    <span class="correct">{{ guess[i] }}</span>
+                    {% elif guess[i] in target %}
+                    <span class="partial">{{ guess[i] }}</span>
+                    {% else %}
+                    <span class="incorrect">{{ guess[i] }}</span>
+                    {% endif %}
+                {% endfor %}
+            </li>
+        {% endfor %}
+    </ul>
+
+    <a href="/reset">Reset Game</a>
+    
+    <a href="{{ url_for('index') }}">Go backs</a>
+</body>
+</html>
