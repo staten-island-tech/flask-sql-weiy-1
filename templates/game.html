@@ -2,10 +2,10 @@
 <html>
 <head>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-    <title>Wordle Game</title>
+    <title>worldle gaem</title>
 </head>
 <body>
-    <h1>Guess the Word</h1>
+    <h1>guess le'word</h1>
     {% with messages = get_flashed_messages() %}
       {% if messages %}
         <ul>
@@ -25,18 +25,25 @@
     <ul>
         {% for guess in guesses %}
             <li>
-                {% for i in range(5) %}
-                    {% if guess[i] == target[i] %}
-                    <span class="correct">{{ guess[i] }}</span>
-                    {% elif guess[i] in target %}
-                    <span class="partial">{{ guess[i] }}</span>
-                    {% else %}
-                    <span class="incorrect">{{ guess[i] }}</span>
-                    {% endif %}
+                {% for letter, status in guess %}
+                    <span class="{{ status }}">{{ letter }}</span>
                 {% endfor %}
             </li>
         {% endfor %}
-    </ul>
+    </ul>    
+
+        <h2>keboard:</h2>
+            <div class="keyboard">
+                {% set rows = ['QWERTYUIOP', 'ASDFGHJKL', 'ZXCVBNM'] %}
+                {% for row in rows %}
+                    <div class="keyboard-row">
+                        {% for letter in row %}
+                            {% set status = keyboard.get(letter, '') %}
+                            <span class="key {{ status }}">{{ letter }}</span>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+            </div>
 
     <a href="/reset">Reset Game</a>
     
