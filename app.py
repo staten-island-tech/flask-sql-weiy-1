@@ -8,9 +8,38 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///wordle.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
+
+
 class Word(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     text = db.Column(db.String(5), unique=True, nullable=False)
+
+def colorize_guess(guess, target):
+    result = []
+    guess_used = [False] * 5
+    target_used = [False] * 5
+
+    for i in range(5):
+        if guess[i] == target[i]:
+            result.append((guess[i], 'correct'))
+            guess_used[i] = True
+            target_used[i] = True
+        else:
+            result.append((guess[i], ''))
+
+    for i in range(5):
+        if result[i][1] == '':
+            matched = False
+            for j in range(5):
+                if not target_used[j] and guess[i] == target[j]:
+                    result[i] = (guess[i], 'partial')
+                    target_used[j] = True
+                    matched = True
+                    break
+            if not matched:
+                result[i] = (guess[i], 'incorrect')
+
+    return result
 
 def update_keyboard_status(keyboard, guess, target):
     guess_used = [False] * 5
@@ -60,8 +89,10 @@ def game():
     if request.method == 'POST':
         guess = request.form.get('guess', '').upper()
         if len(guess) == 5 and guess.isalpha():
-            if guess not in guesses:
-                guesses.append(guess)
+            # Only add guess if it's not already in the list
+            if guess not in [''.join([letter for letter, _ in g]) for g in guesses]:
+                colored_guess = colorize_guess(guess, target)
+                guesses.append(colored_guess)
                 update_keyboard_status(keyboard, guess, target)
                 session['guesses'] = guesses
                 session['keyboard'] = keyboard
